@@ -1,0 +1,878 @@
+{
+	"variables": [],
+	"info": {
+		"name": "BIG-IQ REST call collection",
+		"_postman_id": "a0c79676-6b21-2237-e25d-7a89853f7135",
+		"description": "# BIG-IQ ADC - Deployment\n\nBefore you start with the deployment, follow these steps:\n\n1. Adapt the Authorization header in \"Get Authentication Token\".\n2. Select the \"BIG-IQ REST call collection\" as the default Environment set.\n3. Modify the Environment Variables according to your environment.\n\nYou can go through the steps one by one or let them run automated via Runner (see top left corner).\n\nIf you use Runner, make sure you select the BIG-IQ ADC - Deployment folder and for the Environment \"BIG-IQ REST call collection\". Also, you should set the Delay to 1000 ms.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "BIG-IQ ADC - Deployment",
+			"description": "Import and define first the environment variable regarding your environment.",
+			"item": [
+				{
+					"name": "Get Authentication Token",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"//////////////////////////////////////",
+									"// Set Token",
+									"",
+									"var data = JSON.parse(responseBody);",
+									"postman.setGlobalVariable(\"X-F5-Auth-Token\", data.token.token);",
+									""
+								]
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": {
+								"username": "admin",
+								"password": "admin",
+								"saveHelperData": true,
+								"showPassword": false
+							}
+						},
+						"url": "https://{{BIG-IQ_mgmt}}/mgmt/shared/authn/login",
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"description": ""
+							},
+							{
+								"key": "Authorization",
+								"value": "Basic YWRtaW46YWRtaW4=",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\":\"{{BIG-IQ_username}}\",\n    \"password\":\"{{BIG-IQ_password}}\",\n    \"loginProviderName\": \"local\"\n}"
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "Get Device UUID",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"var data = JSON.parse(responseBody);",
+									"",
+									"for ( var i in data[\"items\"]) {",
+									"    device = data[\"items\"][i];",
+									"    if ( device[\"hostname\"] === postman.getEnvironmentVariable(\"BIG-IP_hostname\")) {",
+									"        postman.setGlobalVariable(\"BIG-IP_uuid\", device[\"uuid\"]);",
+									"        postman.setGlobalVariable(\"selfLink_bigip\", device[\"selfLink\"]);",
+									"        break;",
+									"    }",
+									"}",
+									""
+								]
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"// Erase object List, to start from zero",
+									"postman.clearGlobalVariable(\"objectsToDeploy\");",
+									"",
+									""
+								]
+							}
+						}
+					],
+					"request": {
+						"url": "https://{{BIG-IQ_mgmt}}/mgmt/shared/resolver/device-groups/cm-adccore-allbigipDevices/devices?$filter=hostname eq '{{BIG-IP_hostname}}'",
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"description": ""
+							},
+							{
+								"key": "X-F5-Auth-Token",
+								"value": "{{X-F5-Auth-Token}}",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": " {\r\n   \"skipVerifyConfig\":false,\r\n   \"skipDistribution\":false,\r\n   \"snapshotReference\":null,\r\n   \"objectsToDeployReferences\":[\r\n      {\r\n         \"link\":\"https://localhost/mgmt/cm/adc-core/working-config/ltm/pool/e80bf7e0-41ac-3056-a114-4a1b2ddc0b6c\"\r\n      }\r\n   ],\r\n   \"name\":\"add\",\r\n   \"deploySpecifiedObjectsOnly\":false,\r\n   \"deviceReferences\":[\r\n      {\r\n         \"link\":\"https://localhost/mgmt/shared/resolver/device-groups/cm-adccore-allbigipDevices/devices/00b1ece7-c700-47ab-8ce0-4bcea4b3b9e9\"\r\n      }\r\n   ]\r\n}"
+						},
+						"description": "Get the UUID based on the Big-IP hostname.\nNeed to be configured in the environment variable 'BIG-IP_hostname'"
+					},
+					"response": []
+				},
+				{
+					"name": "Create Monitor",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"// Get objectsToDeployReferences",
+									"objList = [];",
+									"objStr = postman.getGlobalVariable(\"objectsToDeploy\");",
+									"if ( typeof objStr != 'undefined') {",
+									"    obj = JSON.parse(objStr);",
+									"    objList = obj.objectsToDeployReferences;",
+									"}",
+									"//////////////////////////////////////",
+									"// Add Reference",
+									"",
+									"var data = JSON.parse(responseBody);",
+									"var selfLink = {};",
+									"",
+									"if ( typeof data.selfLink != 'undefined') {",
+									"    selfLink.link = data.selfLink;",
+									"    objList.push(selfLink);",
+									"    tests[\"Monitor created\"] = true;",
+									"}",
+									"else {",
+									"    tests[\"Monitor created\"] = false;",
+									"}",
+									"",
+									"//Set  objectsToDeployReferences",
+									"//////////////////////////////////////",
+									"var obj = {};",
+									"obj.objectsToDeployReferences = objList;",
+									"postman.setGlobalVariable(\"objectsToDeploy\", JSON.stringify(obj));",
+									"",
+									"//Set  selfLink_monitor",
+									"//////////////////////////////////////",
+									"postman.setGlobalVariable(\"selfLink_monitor\", data.selfLink);",
+									""
+								]
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"postman.setGlobalVariable(\"http_monitor_timeout\", ( postman.getEnvironmentVariable(\"http_monitor_interval\") * 3 + 1).toString() );",
+									""
+								]
+							}
+						}
+					],
+					"request": {
+						"url": "https://{{BIG-IQ_mgmt}}/mgmt/cm/adc-core/working-config/ltm/monitor/http",
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"description": ""
+							},
+							{
+								"key": "X-F5-Auth-Token",
+								"value": "{{X-F5-Auth-Token}}",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"ipDscp\": 0,\n  \"send\": \"{{http_monitor_send}}\",\n  \"adaptive\": false,\n  \"adaptiveDivergenceType\": \"relative\",\n  \"adaptiveDivergenceValue\": 25,\n  \"adaptiveLimit\": 200,\n  \"adaptiveSamplingTimespan\": 300,\n  \"destination\": \"*:*\",\n  \"interval\": {{http_monitor_interval}},\n  \"manualResume\": false,\n  \"reverse\": false,\n  \"timeUntilUp\": 0,\n  \"timeout\": {{http_monitor_timeout}},\n  \"transparent\": false,\n  \"upInterval\": 0,\n  \"isNoWrite\": false,\n  \"isNoDelete\": false,\n  \"partition\": \"Common\",\n  \"name\": \"{{project_name}}_monitor\"\n}"
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "Create Pool",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"// Get objectsToDeployReferences",
+									"objList = [];",
+									"objStr = postman.getGlobalVariable(\"objectsToDeploy\");",
+									"if ( typeof objStr != 'undefined') {",
+									"    obj = JSON.parse(objStr);",
+									"    objList = obj.objectsToDeployReferences;",
+									"}",
+									"//////////////////////////////////////",
+									"// Add Reference",
+									"",
+									"var data = JSON.parse(responseBody);",
+									"var selfLink = {};",
+									"if ( typeof data.selfLink != 'undefined') {",
+									"    selfLink.link = data.selfLink;",
+									"    objList.push(selfLink);",
+									"    tests[\"Pool created\"] = true;",
+									"}",
+									"else {",
+									"    tests[\"Pool created\"] = false;",
+									"}",
+									"//Set  objectsToDeployReferences",
+									"//////////////////////////////////////",
+									"var obj = {};",
+									"obj.objectsToDeployReferences = objList;",
+									"postman.setGlobalVariable(\"objectsToDeploy\", JSON.stringify(obj));",
+									"",
+									"//Set  selfLink_pool",
+									"//////////////////////////////////////",
+									"postman.setGlobalVariable(\"selfLink_pool\", data.selfLink);",
+									"",
+									"//Set  pool id",
+									"//////////////////////////////////////",
+									"postman.setGlobalVariable(\"pool_id\", data.id);",
+									"",
+									"// Skip creation of Nodes if poolMember list is empty",
+									"//////////////////////////////////////",
+									"var poolMembers = JSON.parse(postman.getEnvironmentVariable(\"poolMembers\"));",
+									"if (poolMembers.length <= 0) {",
+									"    postman.setNextRequest(\"Create HTTP Profile\");",
+									"}",
+									"tests[\"PoolMember List available\"] = poolMembers.length > 0;",
+									"",
+									""
+								]
+							}
+						}
+					],
+					"request": {
+						"url": "https://{{BIG-IQ_mgmt}}/mgmt/cm/adc-core/working-config/ltm/pool/",
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"description": ""
+							},
+							{
+								"key": "X-F5-Auth-Token",
+								"value": "{{X-F5-Auth-Token}}",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"{{project_name}}_pool\",\n    \"allowNat\": true,\n    \"allowSnat\": true,\n    \"ignorePersistedWeight\": false,\n    \"ipTosToClientControl\": \"pass-through\",\n    \"ipTosToServerControl\": \"pass-through\",\n    \"linkQosToClient\": 65535,\n    \"linkQosToServer\": 65535,\n    \"loadBalancingMode\": \"round-robin\",\n    \"minActiveMembers\": 0,\n    \"queueDepthLimit\": 0,\n    \"enableQueueOnConnectionLimit\": false,\n    \"queueTimeLimit\": 0,\n    \"reselectTries\": 0,\n    \"serviceDownAction\": \"none\",\n    \"slowRampTime\": 10,\n    \"monitorHttpReferences\": [\n      {\n        \"link\": \"{{selfLink_monitor}}\"\n      }\n    ],\n    \"partition\": \"Common\",\n    \"deviceReference\": {\n    \t\"link\": \"{{selfLink_bigip}}\"\n    }\n}"
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "Create Node",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"// Get objectsToDeployReferences",
+									"objList = [];",
+									"objStr = postman.getGlobalVariable(\"objectsToDeploy\")",
+									"if ( typeof objStr != 'undefined') {",
+									"    obj = JSON.parse(objStr);",
+									"    objList = obj[\"objectsToDeployReferences\"];",
+									"}",
+									"",
+									"//////////////////////////////////////",
+									"// Add Reference",
+									"",
+									"nodeAddress = postman.getGlobalVariable(\"node_address\");",
+									"var data = JSON.parse(responseBody);",
+									"var selfLink = {};",
+									"",
+									"if ( typeof data.selfLink != 'undefined') {",
+									"    selfLink.link = data.selfLink;",
+									"    objList.push(selfLink);",
+									"    tests[\"Node \" + nodeAddress + \" created\"] = true;",
+									"}",
+									"else {",
+									"    tests[\"Node \" + nodeAddress + \" created\"] = false;",
+									"}",
+									"",
+									"//Set  objectsToDeployReferences",
+									"//////////////////////////////////////",
+									"var obj = {};",
+									"obj[\"objectsToDeployReferences\"] = objList;",
+									"postman.setGlobalVariable(\"objectsToDeploy\", JSON.stringify(obj));",
+									"",
+									"//Set  selfLink_node",
+									"//////////////////////////////////////",
+									"postman.setGlobalVariable(\"selfLink_node\", data.selfLink);",
+									"",
+									""
+								]
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"// Start Loop",
+									"",
+									"var i = postman.getGlobalVariable(\"index\")",
+									"",
+									"if ( typeof i == 'undefined') {",
+									"    i = 0;",
+									"}",
+									"",
+									"var poolMembers = JSON.parse(postman.getEnvironmentVariable(\"poolMembers\"));",
+									"var poolMember = poolMembers[i];",
+									"var split = poolMember.split(\" \");",
+									"",
+									"postman.setGlobalVariable(\"node_address\", split[0]);",
+									"postman.setGlobalVariable(\"poolMember_port\", split[1]);",
+									"postman.setGlobalVariable(\"index\", ++i);",
+									""
+								]
+							}
+						}
+					],
+					"request": {
+						"url": "https://{{BIG-IQ_mgmt}}/mgmt/cm/adc-core/working-config/ltm/node",
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"description": ""
+							},
+							{
+								"key": "X-F5-Auth-Token",
+								"value": "{{X-F5-Auth-Token}}",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"{{node_address}}\",\n    \"address\": \"{{node_address}}\",\n    \"connectionLimit\": 0,\n    \"isEphemeral\": false,\n    \"rateLimit\": \"disabled\",\n    \"ratio\": 1,\n    \"sessionConfig\": \"user-enabled\",\n    \"stateConfig\": \"user-up\",\n    \"fqdn\": {\n      \"addressFamily\": \"ipv4\",\n      \"isAutoPopulate\": false,\n      \"downInterval\": 5,\n      \"interval\": \"3600\"\n    },\n    \"deviceReference\": {\n    \t\"link\": \"{{selfLink_bigip}}\"\n    },\n    \"partition\": \"Common\"\n}"
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "Add PoolMember",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"// while part of loop",
+									"",
+									"var i = postman.getGlobalVariable(\"index\")",
+									"var poolMembers = JSON.parse(postman.getEnvironmentVariable(\"poolMembers\"));",
+									"",
+									"if (poolMembers.length > i) { // next iteration",
+									"    postman.setNextRequest(\"Create Node\");",
+									"}",
+									"else {",
+									"    postman.clearGlobalVariable(\"index\");",
+									"}",
+									"",
+									"tests[\"PoolMember \" + poolMembers[i-1] + \" created\"] = responseCode.code === 200;",
+									"",
+									"",
+									""
+								]
+							}
+						}
+					],
+					"request": {
+						"url": "https://{{BIG-IQ_mgmt}}/mgmt/cm/adc-core/working-config/ltm/pool/{{pool_id}}/members",
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"description": ""
+							},
+							{
+								"key": "X-F5-Auth-Token",
+								"value": "{{X-F5-Auth-Token}}",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"{{node_address}}:{{poolMember_port}}\",\n    \"port\": \"{{poolMember_port}}\",\n    \"connectionLimit\": 0,\n    \"priorityGroup\": 0,\n    \"rateLimit\": \"disabled\",\n    \"ratio\": 1,\n    \"sessionConfig\": \"user-enabled\",\n    \"stateConfig\": \"user-up\",\n    \"nodeReference\": {\n        \"link\": \"{{selfLink_node}}\"\n    },\n    \"partition\": \"Common\"\n}"
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "Create HTTP Profile",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"// Get objectsToDeployReferences",
+									"objList = [];",
+									"objStr = postman.getGlobalVariable(\"objectsToDeploy\");",
+									"if ( typeof objStr != 'undefined') {",
+									"    obj = JSON.parse(objStr);",
+									"    objList = obj[\"objectsToDeployReferences\"];",
+									"}",
+									"",
+									"console.log(\"Validation failed\" + objList );",
+									"//////////////////////////////////////",
+									"// Add Reference",
+									"",
+									"var data = JSON.parse(responseBody);",
+									"var selfLink = {};",
+									"",
+									"if ( typeof data.selfLink != 'undefined') {",
+									"    selfLink.link = data.selfLink;",
+									"    objList.push(selfLink);",
+									"    tests[\"HTTP profile created\"] = true;",
+									"}",
+									"else {",
+									"    tests[\"HTTP profile created\"] = false;",
+									"}",
+									"",
+									"//Set  objectsToDeployReferences",
+									"//////////////////////////////////////",
+									"var obj = {};",
+									"obj[\"objectsToDeployReferences\"] = objList;",
+									"postman.setGlobalVariable(\"objectsToDeploy\", JSON.stringify(obj));",
+									"",
+									"//Set  selfLink_virtual",
+									"//////////////////////////////////////",
+									"postman.setGlobalVariable(\"selfLink_profile_http\", data.selfLink);"
+								]
+							}
+						}
+					],
+					"request": {
+						"url": "https://{{BIG-IQ_mgmt}}/mgmt/cm/adc-core/working-config/ltm/profile/http/",
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"description": ""
+							},
+							{
+								"key": "X-F5-Auth-Token",
+								"value": "{{X-F5-Auth-Token}}",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"{{project_name}}_http\",\n  \"isInsertXforwardedForEnabled\": true,\n  \"proxyType\": \"reverse\",\n  \"partition\": \"Common\"\n}"
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "Create virtual",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"// Get objectsToDeployReferences",
+									"objList = [];",
+									"objStr = postman.getGlobalVariable(\"objectsToDeploy\");",
+									"if ( typeof objStr != 'undefined') {",
+									"    obj = JSON.parse(objStr);",
+									"    objList = obj.objectsToDeployReferences;",
+									"}",
+									"//////////////////////////////////////",
+									"// Add Reference",
+									"",
+									"var data = JSON.parse(responseBody);",
+									"var selfLink = {};",
+									"if ( typeof data.selfLink != 'undefined') {",
+									"    selfLink.link = data.selfLink;",
+									"    objList.push(selfLink);",
+									"    tests[\"Virtual created\"] = true;",
+									"}",
+									"else {",
+									"    tests[\"Virtual created\"] = false;",
+									"}",
+									"//Set  objectsToDeployReferences",
+									"//////////////////////////////////////",
+									"var obj = {};",
+									"obj.objectsToDeployReferences = objList;",
+									"postman.setGlobalVariable(\"objectsToDeploy\", JSON.stringify(obj));",
+									"",
+									"//Set  selfLink_virtual",
+									"//////////////////////////////////////",
+									"postman.setGlobalVariable(\"selfLink_virtual\", data.selfLink);",
+									"",
+									"//Set  virtual id",
+									"//////////////////////////////////////",
+									"postman.setGlobalVariable(\"virtual_id\", data.id);",
+									"",
+									""
+								]
+							}
+						}
+					],
+					"request": {
+						"url": "https://{{BIG-IQ_mgmt}}/mgmt/cm/adc-core/working-config/ltm/virtual",
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"description": ""
+							},
+							{
+								"key": "X-F5-Auth-Token",
+								"value": "{{X-F5-Auth-Token}}",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"{{project_name}}_vs\",\n    \"sourceAddress\": \"0.0.0.0/0\",\n    \"sourceAddressTranslation\": {\n      \"type\": \"automap\"\n    },\n    \"destinationAddress\": \"{{virtual_address}}\",\n    \"destinationPort\": \"{{virtual_port}}\",\n    \"mask\": \"255.255.255.255\",\n    \"state\": \"enabled\",\n    \"mirror\": \"disabled\",\n    \"ipProtocol\": \"tcp\",\n    \"poolReference\": {\n      \"link\": \"{{selfLink_pool}}\"\n    },\n    \"deviceReference\": {\n        \"link\": \"{{selfLink_bigip}}\"\n    },\n    \"addressStatus\": \"yes\",\n    \"autoLasthop\": \"default\",\n    \"connectionLimit\": 0,\n    \"gtmScore\": 0,\n    \"nat64\": \"disabled\",\n    \"rateLimit\": \"disabled\",\n    \"rateLimitMode\": \"object\",\n    \"translateAddress\": \"enabled\",\n    \"translatePort\": \"enabled\",\n    \"sourcePort\": \"preserve\",\n    \"partition\": \"Common\"\n}"
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "Add HTTP profile",
+					"request": {
+						"url": "https://{{BIG-IQ_mgmt}}/mgmt/cm/adc-core/working-config/ltm/virtual/{{virtual_id}}/profiles/",
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"description": ""
+							},
+							{
+								"key": "X-F5-Auth-Token",
+								"value": "{{X-F5-Auth-Token}}",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"{{project_name}}_http\",\n  \"profileHttpReference\": {\n    \"link\": \"{{selfLink_profile_http}}\"\n  },\n  \"context\": \"all\",\n  \"partition\": \"Common\"\n}"
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "Get TCP profile selfLink",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"var data = JSON.parse(responseBody);",
+									"",
+									"for ( var i in data[\"items\"]) {",
+									"    profile = data[\"items\"][i];",
+									"    if ( profile[\"name\"] == \"tcp\") {",
+									"        if ( typeof data.selfLink != 'undefined') {",
+									"            postman.setGlobalVariable(\"selfLink_profile_tcp\", profile.selfLink);",
+									"            tests[\"Found tcp profile\"] = true;",
+									"        }",
+									"        break;",
+									"    }",
+									"}",
+									""
+								]
+							}
+						}
+					],
+					"request": {
+						"url": "https://{{BIG-IQ_mgmt}}/mgmt/cm/adc-core/working-config/ltm/profile/tcp/?$filter=name eq 'tcp'",
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"description": ""
+							},
+							{
+								"key": "X-F5-Auth-Token",
+								"value": "{{X-F5-Auth-Token}}",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": " {\r\n   \"skipVerifyConfig\":false,\r\n   \"skipDistribution\":false,\r\n   \"snapshotReference\":null,\r\n   \"objectsToDeployReferences\":[\r\n      {\r\n         \"link\":\"https://localhost/mgmt/cm/adc-core/working-config/ltm/pool/e80bf7e0-41ac-3056-a114-4a1b2ddc0b6c\"\r\n      }\r\n   ],\r\n   \"name\":\"add\",\r\n   \"deploySpecifiedObjectsOnly\":false,\r\n   \"deviceReferences\":[\r\n      {\r\n         \"link\":\"https://localhost/mgmt/shared/resolver/device-groups/cm-adccore-allbigipDevices/devices/00b1ece7-c700-47ab-8ce0-4bcea4b3b9e9\"\r\n      }\r\n   ]\r\n}"
+						},
+						"description": "Get the UUID based on the Big-IP hostname.\nNeed to be configured in the environment variable 'BIG-IP_hostname'"
+					},
+					"response": []
+				},
+				{
+					"name": "Add TCP profile",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"// If scheduled is true, we will jump to the scedule requests",
+									"//////////////////////////////////////",
+									"var schedule = JSON.parse(postman.getEnvironmentVariable(\"schedule\"));",
+									"if (schedule) {",
+									"    postman.setNextRequest(\"Deployment Evaluation\");",
+									"}",
+									""
+								]
+							}
+						}
+					],
+					"request": {
+						"url": "https://{{BIG-IQ_mgmt}}/mgmt/cm/adc-core/working-config/ltm/virtual/{{virtual_id}}/profiles/",
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"description": ""
+							},
+							{
+								"key": "X-F5-Auth-Token",
+								"value": "{{X-F5-Auth-Token}}",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"tcp\",\n  \"profileTcpReference\": {\n    \"link\": \"{{selfLink_profile_tcp}}\"\n  },\n  \"context\": \"all\",\n  \"partition\": \"Common\"\n}"
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "Deployment Directly",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"// After direct Deployment skip the schduled deployment ",
+									"///////////////////////////////////////////////////////",
+									"postman.setNextRequest(null);"
+								]
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"// Get objectsToDeployReferences",
+									"objStr = postman.getGlobalVariable(\"objectsToDeploy\")",
+									"if ( typeof objStr != 'undefined') {",
+									"    objStr = objStr.slice(1, objStr.length-1);",
+									"    postman.setGlobalVariable(\"objectsToDeployReferences\", objStr);",
+									"}",
+									""
+								]
+							}
+						}
+					],
+					"request": {
+						"url": "https://{{BIG-IQ_mgmt}}/mgmt/cm/adc-core/tasks/deploy-configuration",
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"description": ""
+							},
+							{
+								"key": "X-F5-Auth-Token",
+								"value": "{{X-F5-Auth-Token}}",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": " {\r\n   \"skipVerifyConfig\":false,\r\n   \"skipDistribution\":false,\r\n   \"snapshotReference\":null,\r\n   {{objectsToDeployReferences}},\r\n   \"name\":\"{{project_name}}\",\r\n   \"deploySpecifiedObjectsOnly\":false,\r\n   \"deviceReferences\":[\r\n      {\r\n         \"link\":\"{{selfLink_bigip}}\"\r\n      }\r\n   ]\r\n}"
+						},
+						"description": "This will directly deploy all the above made configurations."
+					},
+					"response": []
+				},
+				{
+					"name": "Deployment Evaluation",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"var data = JSON.parse(responseBody);",
+									"//Set  deployment_uuid",
+									"//////////////////////////////////////",
+									"postman.setGlobalVariable(\"deployment_uuid\", data['id']);"
+								]
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"// Get objectsToDeployReferences",
+									"objStr = postman.getGlobalVariable(\"objectsToDeploy\")",
+									"if ( typeof objStr != 'undefined') {",
+									"    objStr = objStr.slice(1, objStr.length-1);",
+									"    postman.setGlobalVariable(\"objectsToDeployReferences\", objStr);",
+									"}",
+									""
+								]
+							}
+						}
+					],
+					"request": {
+						"url": "https://{{BIG-IQ_mgmt}}/mgmt/cm/adc-core/tasks/deploy-configuration",
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"description": ""
+							},
+							{
+								"key": "X-F5-Auth-Token",
+								"value": "{{X-F5-Auth-Token}}",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": " {\n   \"skipVerifyConfig\":false,\n   \"skipDistribution\":true,\n   \"snapshotReference\":null,\n   {{objectsToDeployReferences}},\n   \"name\":\"{{project_name}}\",\n   \"deploySpecifiedObjectsOnly\":false,\n   \"deviceReferences\":[\n      {\n         \"link\":\"{{selfLink_bigip}}\"\n      }\n   ]\n}\n\n"
+						},
+						"description": "This Deployment will just create the Deployment without deploying it. Next you can Scedule the Deployment over Deployment_Scheduled."
+					},
+					"response": []
+				},
+				{
+					"name": "Wait until Deployment Evaluation done",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"var data = JSON.parse(responseBody);",
+									"//Set  deployment_uuid",
+									"//////////////////////////////////////",
+									"",
+									"tests[\"Monitoring... Evaluation of Deployment\"] = true;",
+									"",
+									"if (data.status == \"FAILED\") {",
+									"    tests[\"Evaluation of Deployment\"] = false;",
+									"    postman.setNextRequest(null);",
+									"}",
+									"else if (data.status == \"STARTED\") {",
+									"    postman.setNextRequest(\"Wait until Deployment Evaluation done\");",
+									"}",
+									"else if (data.status == \"FINISHED\") {",
+									"    tests[\"Evaluation of Deployment\"] = true;",
+									"}",
+									"",
+									""
+								]
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"// Get objectsToDeployReferences",
+									"objStr = postman.getGlobalVariable(\"objectsToDeploy\")",
+									"if ( typeof objStr != 'undefined') {",
+									"    objStr = objStr.slice(1, objStr.length-1);",
+									"    postman.setGlobalVariable(\"objectsToDeployReferences\", objStr);",
+									"}",
+									""
+								]
+							}
+						}
+					],
+					"request": {
+						"url": "https://{{BIG-IQ_mgmt}}/mgmt/cm/adc-core/tasks/deploy-configuration/{{deployment_uuid}}",
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"description": ""
+							},
+							{
+								"key": "X-F5-Auth-Token",
+								"value": "{{X-F5-Auth-Token}}",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": " {\n   \"skipVerifyConfig\":false,\n   \"skipDistribution\":true,\n   \"snapshotReference\":null,\n   {{objectsToDeployReferences}},\n   \"name\":\"{{project_name}}\",\n   \"deploySpecifiedObjectsOnly\":false,\n   \"deviceReferences\":[\n      {\n         \"link\":\"{{selfLink_bigip}}\"\n      }\n   ]\n}\n\n"
+						},
+						"description": "This Deployment will just create the Deployment without deploying it. Next you can Scedule the Deployment over Deployment_Scheduled."
+					},
+					"response": []
+				},
+				{
+					"name": "Deployment Scheduled",
+					"request": {
+						"url": "https://{{BIG-IQ_mgmt}}/mgmt/cm/adc-core/tasks/deploy-configuration/{{deployment_uuid}}",
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"description": ""
+							},
+							{
+								"key": "X-F5-Auth-Token",
+								"value": "{{X-F5-Auth-Token}}",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n   \"skipDistribution\":false,\n   \"futureSchedule\": {\n      \"timeToStartOn\": \"{{schedule_date}}T{{schedule_time}}.000Z\",\n      \"whenScheduleMisfiresTryAndRerun\": false,\n      \"overrideAndRunNow\": false,\n      \"preValidate\": false,\n      \"rescheduleJob\": false,\n      \"restartJob\": false,\n      \"deleteWhenFinished\": false,\n      \"maxTaskHistoryToKeep\": 10,\n      \"lastUpdateMicros\": 0\n   }\n}\n\n"
+						},
+						"description": "This will scedule a created deployment. Please adapt the time at in the timeToStartOn propertie in the body of the request."
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}
