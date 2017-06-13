@@ -1,0 +1,251 @@
+{
+	"variables": [],
+	"info": {
+		"name": "ASM",
+		"_postman_id": "5785631d-b5b5-d785-ce6d-e416aaa27a61",
+		"description": "",
+		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Create ASM policy",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"var data = JSON.parse(responseBody);",
+							"",
+							"// set policy id",
+							"postman.setGlobalVariable(\"ASM_Policy_id\", data[\"id\"]);",
+							""
+						]
+					}
+				}
+			],
+			"request": {
+				"url": "https://{{ASM_mgmt}}/mgmt/tm/asm/policies",
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Basic YWRtaW46YWRtaW4=",
+						"description": ""
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"name\": \"REST_asm_policy_1\",\n  \"description\": \"\",\n  \"hasParent\": false,\n  \"modifierName\": \"\",\n  \"caseInsensitive\": false,\n  \"protocolIndependent\": false,\n  \"partition\": \"Common\",\n  \"applicationLanguage\": \"utf-8\",\n  \"enforcementMode\": \"transparent\",\n  \"versionDeviceName\": \"bigip01.localdomain\",\n  \"active\": false,\n  \"type\": \"security\",\n  \"creatorName\": \"SYSTEM\",\n  \"isModified\": false\n}"
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "Show ASM policy",
+			"request": {
+				"url": "https://{{ASM_mgmt}}/mgmt/tm/asm/policies/{{ASM_Policy_id}}",
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Basic YWRtaW46YWRtaW4=",
+						"description": ""
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"name\": \"REST_asm_policy_1\",\n  \"caseInsensitive\": false,\n  \"description\": \"\",\n  \"hasParent\": false,\n  \"partition\": \"Common\",\n  \"applicationLanguage\": \"utf-8\",\n  \"enforcementMode\": \"transparent\",\n  \"versionDeviceName\": \"bigip01.localdomain\",\n  \"modifierName\": \"\",\n  \"active\": false,\n  \"type\": \"security\",\n  \"creatorName\": \"SYSTEM\",\n  \"isModified\": false\n}"
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "Show ASM policy filetypes",
+			"request": {
+				"url": "https://{{ASM_mgmt}}/mgmt/tm/asm/policies/{{ASM_Policy_id}}/filetypes",
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Basic YWRtaW46YWRtaW4=",
+						"description": ""
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"name\": \"REST_asm_policy_1\",\n  \"caseInsensitive\": false,\n  \"description\": \"\",\n  \"hasParent\": false,\n  \"partition\": \"Common\",\n  \"applicationLanguage\": \"utf-8\",\n  \"enforcementMode\": \"transparent\",\n  \"versionDeviceName\": \"bigip01.localdomain\",\n  \"modifierName\": \"\",\n  \"active\": false,\n  \"type\": \"security\",\n  \"creatorName\": \"SYSTEM\",\n  \"isModified\": false\n}"
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "Add ASM policy filetypes",
+			"request": {
+				"url": "https://{{ASM_mgmt}}/mgmt/tm/asm/policies/{{ASM_Policy_id}}/filetypes",
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Basic YWRtaW46YWRtaW4=",
+						"description": ""
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"name\": \"html\",\n  \"responseCheck\": false,\n  \"allowed\": true,\n  \"type\": \"explicit\",\n  \"performStaging\": true,\n  \"queryStringLength\": 1000,\n  \"checkQueryStringLength\": true,\n  \"postDataLength\": 1000,\n  \"checkPostDataLength\": true,\n  \"requestLength\": 5000,\n  \"checkRequestLength\": true,\n  \"urlLength\": 100,\n  \"checkUrlLength\": true\n}"
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "Show ASM policy parameters",
+			"request": {
+				"url": "https://{{ASM_mgmt}}/mgmt/tm/asm/policies/{{ASM_Policy_id}}/parameters",
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Basic YWRtaW46YWRtaW4=",
+						"description": ""
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"name\": \"REST_asm_policy_1\",\n  \"caseInsensitive\": false,\n  \"description\": \"\",\n  \"hasParent\": false,\n  \"partition\": \"Common\",\n  \"applicationLanguage\": \"utf-8\",\n  \"enforcementMode\": \"transparent\",\n  \"versionDeviceName\": \"bigip01.localdomain\",\n  \"modifierName\": \"\",\n  \"active\": false,\n  \"type\": \"security\",\n  \"creatorName\": \"SYSTEM\",\n  \"isModified\": false\n}"
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "Add ASM policy parameters",
+			"request": {
+				"url": "https://{{ASM_mgmt}}/mgmt/tm/asm/policies/{{ASM_Policy_id}}/parameters",
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Basic YWRtaW46YWRtaW4=",
+						"description": ""
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"name\": \"username\",\n  \"type\": \"explicit\",\n  \"level\": \"global\",\n  \"performStaging\": true,\n  \"allowEmptyValue\": true,\n  \"allowRepeatedParameterName\": true,\n  \"sensitiveParameter\": false,\n  \"valueType\": \"user-input\",\n  \"dataType\": \"alpha-numeric\",\n  \"maximumLength\": 16,\n  \"checkMaxValueLength\": true,\n  \"metacharsOnParameterValueCheck\": false,\n  \"attackSignaturesCheck\": true,\n  \"signatureOverrides\": [],\n  \"enableRegularExpression\": false,\n  \"isBase64\": false\n}"
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "Show ASM policy urls",
+			"request": {
+				"url": "https://{{ASM_mgmt}}/mgmt/tm/asm/policies/{{ASM_Policy_id}}/urls",
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Basic YWRtaW46YWRtaW4=",
+						"description": ""
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"name\": \"/f5/index.php\",\n  \"protocol\": \"http\",\n  \"type\": \"explicit\",\n  \"performStaging\": true,\n  \"flowsToThisUrlCheck\": false,\n  \"clickjackingProtection\": false,\n  \"attackSignaturesCheck\": true,\n  \"methodsOverrideOnUrlCheck\": false,\n  \"isAllowed\": true,\n  \"description\": \"\"\n}"
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "Add ASM policy urls",
+			"request": {
+				"url": "https://{{ASM_mgmt}}/mgmt/tm/asm/policies/{{ASM_Policy_id}}/urls",
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Basic YWRtaW46YWRtaW4=",
+						"description": ""
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"name\": \"/f5/index.php\",\n  \"protocol\": \"http\",\n  \"type\": \"explicit\",\n  \"performStaging\": true,\n  \"flowsToThisUrlCheck\": false,\n  \"clickjackingProtection\": false,\n  \"attackSignaturesCheck\": true,\n  \"methodsOverrideOnUrlCheck\": false,\n  \"isAllowed\": true,\n  \"description\": \"\"\n}"
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "Apply ASM policy",
+			"request": {
+				"url": "https://{{ASM_mgmt}}/mgmt/tm/asm/policies/{{ASM_Policy_id}}",
+				"method": "PATCH",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Basic YWRtaW46YWRtaW4=",
+						"description": ""
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"isModified\": false\n}"
+				},
+				"description": ""
+			},
+			"response": []
+		}
+	]
+}

@@ -1,0 +1,16 @@
+[
+{
+    "BIGIP_hostname": "bigip.local",
+    "pool_name": "MyApp1_pool",
+    "poolMember_names": ["10.1.6.231:80", "10.1.6.232:80"],
+    "partition": "Common",
+    "state": "enable"
+},
+{
+    "BIGIP_hostname": "bigip.local",
+    "pool_name": "MyApp2_pool",
+    "poolMember_names": ["10.1.6.233:80", "10.1.6.234:80"],
+    "partition": "Common",
+    "state": "disable"
+}
+]

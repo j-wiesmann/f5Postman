@@ -1,0 +1,26 @@
+[
+{
+    "BIGIP_hostname": "bigip.local",
+    "project_name": "MyApp1",
+    "virtual_address": "172.16.1.61",
+    "virtual_port": "80",
+    "poolMembers": ["10.1.6.231 80", "10.1.6.232 80"],
+    "http_monitor_send": "GET /f5/index.php\\\\r\\\\n",
+    "http_monitor_interval": 30,
+    "schedule": true,
+    "schedule_date": "2017-06-23",
+    "schedule_time": "20:40:00"
+},
+{
+    "BIGIP_hostname": "bigip.local",
+    "project_name": "MyApp2",
+    "virtual_address": "172.16.1.62",
+    "virtual_port": "80",
+    "poolMembers": ["10.1.6.233 80", "10.1.6.234 80"],
+    "http_monitor_send": "GET /f5/index.php\\\\r\\\\n",
+    "http_monitor_interval": 30,
+    "schedule": true,
+    "schedule_date": "2017-06-23",
+    "schedule_time": "20:50:00"
+}
+]
