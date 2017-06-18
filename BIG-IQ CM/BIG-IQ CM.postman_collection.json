@@ -3,7 +3,7 @@
 	"info": {
 		"name": "BIG-IQ CM",
 		"_postman_id": "a0c79676-6b21-2237-e25d-7a89853f7135",
-		"description": "# BIG-IQ CM\n\nBefore you start with the deployment, follow these steps:\n\n1. Adapt the Authorization header in \"Get Authentication Token\".\n2. Select \"BIG-IQ CM\" as the default Environment set.\n3. Modify the Environment Variables according to your environment.\n\nYou can go through the deployment steps by step or let them run automated via Runner (see top left corner on the Postman GUI).\n\nRunner Setup:\n* Select the collection and the folder you would like to execute.\n* The Environment need to be set to BIG-IQ CM.\n* I would recommend setting the Delay at least to 50 ms.\n* Optional you can use a Data file (see example in this folder). This will overwrite the Environmental variables.\n* Set the Data File Type to JSON.\n* In the Example Data File, you can see two data sets. If you leave the Iteration at one, it will only use the first set. To use more data sets, you need to increase the Iteration accordingly.\n\n## BIG-IQ ADC - Deployment\n\nIn this folder, you will find an example, how to deploy a virtual with a pool, some PoolMembers http profile and a Monitor. Additionaly, the deployment can be scheduled.\n\n## BIG-IQ ADC - Deployment\n\nThis is an example how the status of a list of PoolMembers can be changed directly.",
+		"description": "# BIG-IQ CM\n\nBefore you start with the deployment, follow these steps:\n\n1. Adapt the Authorization header in \"Get Authentication Token\".\n2. Select \"BIG-IQ CM\" as the default Environment set.\n3. Modify the Environment Variables according to your environment.\n\nYou can go through the deployment steps by step or let them run automated via Runner (see top left corner on the Postman GUI).\n\nRunner Setup:\n* Select the collection and the folder you would like to execute.\n* The Environment need to be set to BIG-IQ CM.\n* I would recommend setting the Delay at least to 50 ms.\n* Optional you can use a Data file (see example in this folder). This will overwrite the Environmental variables.\n* Set the Data File Type to JSON.\n* In the Example Data File, you can see two data sets. If you leave the Iteration at one, it will only use the first set. To use more data sets, you need to increase the Iteration accordingly.\n\n## BIG-IQ ADC - Deployment\n\nIn this folder, you will find an example, how to deploy a virtual with a pool, some PoolMembers http profile and a Monitor. Additionaly, the deployment can be scheduled.\n\n## BIG-IQ ADC - Deployment\n\nThis is an example how the status of a list of PoolMembers can be changed directly.\n\n## BIG-IQ Device - Discover Devices\n\nDiscover Devices. Right now only ADC is supported\n\n* defaultResolution - Needed for the Import to handle collisions\n  * USE_BIGIQ - In case of conflict, configuration of BIG-IQ will be used.\n  * USE_BIGIP - In case of conflict, config of BIG-IP will be used.\n  * none - In case of conflict, an error happen and Import need to be done manually.\n* BIG-IP_username - Only needed if Device is not in trust jet\n* BIG-IP_password - Only needed if Device is not in trust jet\n* BIG-IP_root_password - Only needed if Device is not in trust jet and device is v11.x.x. the Framework need to be updated!",
 		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json"
 	},
 	"item": [
@@ -1363,6 +1363,886 @@
 							"raw": " {\r\n   \"name\":\"Self-Service_someNode:80\",\r\n   \"resourceReference\":{\r\n      \"link\":\"{{selfLink_poolMember}}\"\r\n   },\r\n   \"operation\":\"{{gState}}\"\r\n}"
 						},
 						"description": "This will just create the Deployment without deploying it. Next you can schedule the Deployment over Deployment_Scheduled."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "BIG-IQ Device - Discover Device",
+			"description": "Import and define first the environment variable regarding your environment.",
+			"item": [
+				{
+					"name": "Get Authentication Token",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"//////////////////////////////////////",
+									"// Set Token",
+									"",
+									"var jsonData = JSON.parse(responseBody);",
+									"postman.setGlobalVariable(\"X-F5-Auth-Token\", jsonData.token.token);",
+									""
+								]
+							}
+						}
+					],
+					"request": {
+						"url": "https://{{BIG-IQ_mgmt}}/mgmt/shared/authn/login",
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"description": ""
+							},
+							{
+								"key": "Authorization",
+								"value": "Basic YWRtaW46YWRtaW4=",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\":\"{{BIG-IQ_username}}\",\n    \"password\":\"{{BIG-IQ_password}}\",\n    \"loginProviderName\": \"local\"\n}"
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "Get Device ID",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"var jsonData = JSON.parse(responseBody);",
+									"",
+									"// get device_IP",
+									"var device_IP = postman.getGlobalVariable( \"g_device_IP\");",
+									"",
+									"if ((typeof jsonData.items != 'undefined') && (jsonData.items.length > 0) && (typeof jsonData[\"items\"][0].machineId != 'undefined')) {",
+									"    // ",
+									"    postman.setGlobalVariable(\"g_device_ID\", jsonData[\"items\"][0].machineId);",
+									"    postman.setGlobalVariable(\"g_deviceReference\", jsonData[\"items\"][0].selfLink);",
+									"    postman.setNextRequest(\"Get Discovery Task ID\");",
+									"}",
+									"",
+									"//tests[\"Got Device ID of \" + device_IP + \".\"] = typeof jsonData[\"items\"][0].machineId != 'undefined';",
+									""
+								]
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"// set device_IP",
+									"if ( typeof data.device_IP != 'undefined') {",
+									"    var device_IP = data.device_IP;",
+									"}",
+									"else {",
+									"    var device_IP = postman.getEnvironmentVariable(\"device_IP\");",
+									"}",
+									"postman.setGlobalVariable( \"g_device_IP\", device_IP);",
+									"",
+									"",
+									""
+								]
+							}
+						}
+					],
+					"request": {
+						"url": {
+							"raw": "https://{{BIG-IQ_mgmt}}/mgmt/cm/system/machineid-resolver?$filter=address eq '{{g_device_IP}}'",
+							"protocol": "https",
+							"host": [
+								"{{BIG-IQ_mgmt}}"
+							],
+							"path": [
+								"mgmt",
+								"cm",
+								"system",
+								"machineid-resolver"
+							],
+							"query": [
+								{
+									"key": "$filter",
+									"value": "address eq '{{g_device_IP}}'",
+									"equals": true,
+									"description": ""
+								}
+							],
+							"variable": []
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"description": ""
+							},
+							{
+								"key": "X-F5-Auth-Token",
+								"value": "{{X-F5-Auth-Token}}",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": " {\r\n   \"skipVerifyConfig\":false,\r\n   \"skipDistribution\":false,\r\n   \"snapshotReference\":null,\r\n   \"objectsToDeployReferences\":[\r\n      {\r\n         \"link\":\"https://localhost/mgmt/cm/adc-core/working-config/ltm/pool/e80bf7e0-41ac-3056-a114-4a1b2ddc0b6c\"\r\n      }\r\n   ],\r\n   \"name\":\"add\",\r\n   \"deploySpecifiedObjectsOnly\":false,\r\n   \"deviceReferences\":[\r\n      {\r\n         \"link\":\"https://localhost/mgmt/shared/resolver/device-groups/cm-adccore-allbigipDevices/devices/00b1ece7-c700-47ab-8ce0-4bcea4b3b9e9\"\r\n      }\r\n   ]\r\n}"
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "Trust Device",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"var jsonData = JSON.parse(responseBody);",
+									"",
+									"// get device_IP",
+									"var device_IP = postman.getGlobalVariable( \"g_device_IP\");",
+									"",
+									"if ( typeof jsonData.id != 'undefined') {",
+									"    var task_ID = jsonData.id;",
+									"    postman.setGlobalVariable(\"g_task_ID\", task_ID);",
+									"    tests[\"Trust creation Task created for \" + device_IP] = true;",
+									"    //postman.setNextRequest(\"Delay by idleTimeout\");",
+									"}",
+									"else {",
+									"    tests[\"Trust creation Task created for \" + device_IP] = false;",
+									"    postman.setNextRequest(null);",
+									"}",
+									""
+								]
+							}
+						}
+					],
+					"request": {
+						"url": "https://{{BIG-IQ_mgmt}}/mgmt/cm/global/tasks/device-trust",
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"description": ""
+							},
+							{
+								"key": "X-F5-Auth-Token",
+								"value": "{{X-F5-Auth-Token}}",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"address\": \"{{g_device_IP}}\",\r\n    \"clusterName\": \"{{clusterName}}\",\r\n    \"password\": \"{{BIG-IP_password}}\",\r\n    \"useBigiqSync\": false,\r\n    \"userName\": \"{{BIG-IP_username}}\"\r\n}"
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "Delay by idleTimeout Trust",
+					"request": {
+						"url": "http://localhost:13186/",
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": " {\n   \"skipVerifyConfig\":false,\n   \"skipDistribution\":true,\n   \"snapshotReference\":null,\n   {{objectsToDeployReferences}},\n   \"name\":\"{{g_project_name}}\",\n   \"deploySpecifiedObjectsOnly\":false,\n   \"deviceReferences\":[\n      {\n         \"link\":\"{{selfLink_bigip}}\"\n      }\n   ]\n}\n\n"
+						},
+						"description": "Unfortunately, there is no sleep function available in javascript. to avoid burning CPU cycles or DDoS the BIG-IQ, I add this request."
+					},
+					"response": []
+				},
+				{
+					"name": "Wait until Trusted",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"// get device_IP",
+									"var device_IP = postman.getGlobalVariable( \"g_device_IP\");",
+									"",
+									"// Analyse response",
+									"var jsonData = JSON.parse(responseBody);",
+									"",
+									"if ( typeof jsonData.status != 'undefined') {",
+									"    if (jsonData.status === \"FINISHED\") {",
+									"        if ( typeof jsonData.currentStep != 'undefined') {",
+									"            if (jsonData.currentStep === \"DONE\") {",
+									"                postman.setNextRequest(\"Get Device ID after Trust\");",
+									"            }",
+									"            else if (jsonData.currentStep != \"PENDING_FRAMEWORK_UPGRADE_CONFIRMATION\") {",
+									"                // Not expected",
+									"                tests[\"Trust of \" + device_IP + \" status = \" + jsonData.status + \" - currentStep = \" +jsonData.currentStep + \".\"] = false;",
+									"                postman.setNextRequest(null);",
+									"            }",
+									"            //else {",
+									"            // Need to upgrade Framework (< v12)",
+									"            // No action needed",
+									"            //}",
+									"        }",
+									"        else {",
+									"            tests[\"Trust of \" + device_IP + \" status = \" + jsonData.status + \".\"] = false;",
+									"            postman.setNextRequest(null);            ",
+									"        }",
+									"    }",
+									"    else if ((jsonData.status === \"CANCELLED\") || (jsonData.status === \"FAILED\")) {",
+									"        tests[\"Trust of \" + device_IP + \" status = \" + jsonData.status + \".\"] = false;",
+									"        postman.setNextRequest(null);",
+									"    }",
+									"    else {",
+									"        postman.setNextRequest(\"Delay by idleTimeout Trust\");",
+									"    }",
+									"}",
+									"else {",
+									"    tests[\"Discovery of \" + device_IP + \".\"] = false;",
+									"    postman.setNextRequest(null);",
+									"}",
+									""
+								]
+							}
+						}
+					],
+					"request": {
+						"url": "https://{{BIG-IQ_mgmt}}/mgmt/cm/global/tasks/device-trust/{{g_task_ID}}",
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"description": ""
+							},
+							{
+								"key": "X-F5-Auth-Token",
+								"value": "{{X-F5-Auth-Token}}",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"{{node_address}}\",\n    \"address\": \"{{node_address}}\",\n    \"connectionLimit\": 0,\n    \"isEphemeral\": false,\n    \"rateLimit\": \"disabled\",\n    \"ratio\": 1,\n    \"sessionConfig\": \"user-enabled\",\n    \"stateConfig\": \"user-up\",\n    \"fqdn\": {\n      \"addressFamily\": \"ipv4\",\n      \"isAutoPopulate\": false,\n      \"downInterval\": 5,\n      \"interval\": \"3600\"\n    },\n    \"deviceReference\": {\n    \t\"link\": \"{{selfLink_bigip}}\"\n    },\n    \"partition\": \"Common\"\n}"
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "Framework Upgrade",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"var jsonData = JSON.parse(responseBody);",
+									"",
+									"// get device_IP",
+									"var device_IP = postman.getGlobalVariable( \"g_device_IP\");",
+									"",
+									"if ( typeof jsonData.status != 'undefined') {",
+									"    tests[\"Framework Update started for \" + device_IP] = true;",
+									"    postman.setNextRequest(\"Delay by idleTimeout Trust\");",
+									"}",
+									"else {",
+									"    tests[\"Framework Update started for \" + device_IP] = false;",
+									"    postman.setNextRequest(null);",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"url": "https://{{BIG-IQ_mgmt}}/mgmt/cm/gloal/tasks/device-trust/{{g_task_ID}}",
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"description": ""
+							},
+							{
+								"key": "X-F5-Auth-Token",
+								"value": "{{X-F5-Auth-Token}}",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"confirmFrameworkUpgrade\": true,\r\n    \"rootPassword\": \"{{BIG-IP_root_password}}\",\r\n    \"rootUser\": \"root\",\r\n    \"status\": \"STARTED\"\r\n}"
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "Get Device ID after Trust",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"var jsonData = JSON.parse(responseBody);",
+									"",
+									"// get device_IP",
+									"var device_IP = postman.getGlobalVariable( \"g_device_IP\");",
+									"",
+									"if ( typeof jsonData[\"items\"][0].machineId != 'undefined') {",
+									"    // ",
+									"    postman.setGlobalVariable(\"g_device_ID\", jsonData[\"items\"][0].machineId);",
+									"    postman.setGlobalVariable(\"g_deviceReference\", jsonData[\"items\"][0].selfLink);",
+									"}",
+									"else {",
+									"    postman.setNextRequest(null);",
+									"}",
+									"",
+									"tests[\"Got Device ID of \" + device_IP + \".\"] = typeof jsonData[\"items\"][0].machineId != 'undefined';",
+									""
+								]
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"// set device_IP",
+									"if ( typeof data.device_IP != 'undefined') {",
+									"    var device_IP = data.device_IP;",
+									"}",
+									"else {",
+									"    var device_IP = postman.getEnvironmentVariable(\"device_IP\");",
+									"}",
+									"postman.setGlobalVariable( \"g_device_IP\", device_IP);",
+									"",
+									"",
+									""
+								]
+							}
+						}
+					],
+					"request": {
+						"url": {
+							"raw": "https://{{BIG-IQ_mgmt}}/mgmt/cm/system/machineid-resolver?$filter=address eq '{{g_device_IP}}'",
+							"protocol": "https",
+							"host": [
+								"{{BIG-IQ_mgmt}}"
+							],
+							"path": [
+								"mgmt",
+								"cm",
+								"system",
+								"machineid-resolver"
+							],
+							"query": [
+								{
+									"key": "$filter",
+									"value": "address eq '{{g_device_IP}}'",
+									"equals": true,
+									"description": ""
+								}
+							],
+							"variable": []
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"description": ""
+							},
+							{
+								"key": "X-F5-Auth-Token",
+								"value": "{{X-F5-Auth-Token}}",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": " {\r\n   \"skipVerifyConfig\":false,\r\n   \"skipDistribution\":false,\r\n   \"snapshotReference\":null,\r\n   \"objectsToDeployReferences\":[\r\n      {\r\n         \"link\":\"https://localhost/mgmt/cm/adc-core/working-config/ltm/pool/e80bf7e0-41ac-3056-a114-4a1b2ddc0b6c\"\r\n      }\r\n   ],\r\n   \"name\":\"add\",\r\n   \"deploySpecifiedObjectsOnly\":false,\r\n   \"deviceReferences\":[\r\n      {\r\n         \"link\":\"https://localhost/mgmt/shared/resolver/device-groups/cm-adccore-allbigipDevices/devices/00b1ece7-c700-47ab-8ce0-4bcea4b3b9e9\"\r\n      }\r\n   ]\r\n}"
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "Get Discovery Task ID",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"var jsonData = JSON.parse(responseBody);",
+									"",
+									"",
+									"// get device_IP",
+									"var device_IP = postman.getGlobalVariable( \"g_device_IP\");",
+									"",
+									"if ( (typeof jsonData.totalItems != 'undefined') && (jsonData.totalItems > 0) && (typeof jsonData[\"items\"][0].id != 'undefined') ) {",
+									"    // Task already exist",
+									"    postman.setGlobalVariable(\"g_task_ID\", jsonData[\"items\"][0].id);",
+									"    postman.setNextRequest(\"Restart Discovery Task\");",
+									"}",
+									"",
+									""
+								]
+							}
+						}
+					],
+					"request": {
+						"url": {
+							"raw": "https://{{BIG-IQ_mgmt}}/mgmt/cm/global/tasks/device-discovery?$filter=deviceReference eq '{{g_device_ID}}'",
+							"protocol": "https",
+							"host": [
+								"{{BIG-IQ_mgmt}}"
+							],
+							"path": [
+								"mgmt",
+								"cm",
+								"global",
+								"tasks",
+								"device-discovery"
+							],
+							"query": [
+								{
+									"key": "$filter",
+									"value": "deviceReference eq '{{g_device_ID}}'",
+									"equals": true,
+									"description": ""
+								}
+							],
+							"variable": []
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"description": ""
+							},
+							{
+								"key": "X-F5-Auth-Token",
+								"value": "{{X-F5-Auth-Token}}",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": " {\r\n   \"skipVerifyConfig\":false,\r\n   \"skipDistribution\":false,\r\n   \"snapshotReference\":null,\r\n   \"objectsToDeployReferences\":[\r\n      {\r\n         \"link\":\"https://localhost/mgmt/cm/adc-core/working-config/ltm/pool/e80bf7e0-41ac-3056-a114-4a1b2ddc0b6c\"\r\n      }\r\n   ],\r\n   \"name\":\"add\",\r\n   \"deploySpecifiedObjectsOnly\":false,\r\n   \"deviceReferences\":[\r\n      {\r\n         \"link\":\"https://localhost/mgmt/shared/resolver/device-groups/cm-adccore-allbigipDevices/devices/00b1ece7-c700-47ab-8ce0-4bcea4b3b9e9\"\r\n      }\r\n   ]\r\n}"
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "Create Discovery Task",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"var jsonData = JSON.parse(responseBody);",
+									"",
+									"// get device_IP",
+									"var device_IP = postman.getGlobalVariable( \"g_device_IP\");",
+									"",
+									"if ( typeof jsonData.id != 'undefined') {",
+									"    var task_ID = jsonData.id;",
+									"    postman.setGlobalVariable(\"g_task_ID\", task_ID);",
+									"    tests[\"Deployment Task created for \" + device_IP] = true;",
+									"    postman.setNextRequest(\"Delay by idleTimeout\");",
+									"}",
+									"else {",
+									"    tests[\"Deployment Task created for \" + device_IP] = false;",
+									"    postman.setNextRequest(null);",
+									"}",
+									""
+								]
+							}
+						}
+					],
+					"request": {
+						"url": "https://{{BIG-IQ_mgmt}}/mgmt/cm/global/tasks/device-discovery",
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"description": ""
+							},
+							{
+								"key": "X-F5-Auth-Token",
+								"value": "{{X-F5-Auth-Token}}",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"deviceReference\": {\r\n        \"link\": \"https://localhost/mgmt/cm/system/machineid-resolver/{{g_device_ID}}\"\r\n    },\r\n    \"moduleList\": [\r\n        {\r\n            \"module\": \"adc_core\"\r\n        }\r\n    ],\r\n    \"status\": \"STARTED\"\r\n}"
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "Restart Discovery Task",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"var jsonData = JSON.parse(responseBody);",
+									"",
+									"// get device_IP",
+									"var device_IP = postman.getGlobalVariable( \"g_device_IP\");",
+									"",
+									"if ( typeof jsonData.status != 'undefined') {",
+									"    tests[\"Deployment Task restarted for \" + device_IP] = true;",
+									"}",
+									"else {",
+									"    tests[\"Deployment Task restarted for \" + device_IP] = false;",
+									"    postman.setNextRequest(null);",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"url": "https://{{BIG-IQ_mgmt}}/mgmt/cm/global/tasks/device-discovery/{{g_task_ID}}",
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"description": ""
+							},
+							{
+								"key": "X-F5-Auth-Token",
+								"value": "{{X-F5-Auth-Token}}",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"deviceReference\": {\r\n        \"link\": \"https://localhost/mgmt/cm/system/machineid-resolver/{{g_device_ID}}\"\r\n    },\r\n    \"moduleList\": [\r\n        {\r\n            \"module\": \"adc_core\"\r\n        }\r\n    ],\r\n    \"status\": \"STARTED\"\r\n}"
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "Delay by idleTimeout",
+					"request": {
+						"url": "http://localhost:13186/",
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": " {\n   \"skipVerifyConfig\":false,\n   \"skipDistribution\":true,\n   \"snapshotReference\":null,\n   {{objectsToDeployReferences}},\n   \"name\":\"{{g_project_name}}\",\n   \"deploySpecifiedObjectsOnly\":false,\n   \"deviceReferences\":[\n      {\n         \"link\":\"{{selfLink_bigip}}\"\n      }\n   ]\n}\n\n"
+						},
+						"description": "Unfortunately, there is no sleep function available in javascript. to avoid burning CPU cycles or DDoS the BIG-IQ, I add this request."
+					},
+					"response": []
+				},
+				{
+					"name": "Wait until Discovered",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"// get device_IP",
+									"var device_IP = postman.getGlobalVariable( \"g_device_IP\");",
+									"",
+									"// Analyse response",
+									"var jsonData = JSON.parse(responseBody);",
+									"",
+									"if ( typeof jsonData.status != 'undefined') {",
+									"",
+									"    if (jsonData.status === \"FINISHED\") {",
+									"        tests[\"Discovery of \" + device_IP + \" status = \" + jsonData.status + \".\"] = true;",
+									"    }",
+									"    else if ((jsonData.status === \"CANCELLED\") || (jsonData.status === \"FAILED\")) {",
+									"        tests[\"Discovery of \" + device_IP + \" status = \" + jsonData.status + \".\"] = false;",
+									"        postman.setNextRequest(null);",
+									"    }",
+									"    else {",
+									"        postman.setNextRequest(\"Delay by idleTimeout\");",
+									"    }",
+									"}",
+									"else {",
+									"    tests[\"Discovery of \" + device_IP + \".\"] = false;",
+									"    postman.setNextRequest(null);",
+									"}",
+									""
+								]
+							}
+						}
+					],
+					"request": {
+						"url": "https://{{BIG-IQ_mgmt}}/mgmt/cm/global/tasks/device-discovery/{{g_task_ID}}",
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"description": ""
+							},
+							{
+								"key": "X-F5-Auth-Token",
+								"value": "{{X-F5-Auth-Token}}",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"{{node_address}}\",\n    \"address\": \"{{node_address}}\",\n    \"connectionLimit\": 0,\n    \"isEphemeral\": false,\n    \"rateLimit\": \"disabled\",\n    \"ratio\": 1,\n    \"sessionConfig\": \"user-enabled\",\n    \"stateConfig\": \"user-up\",\n    \"fqdn\": {\n      \"addressFamily\": \"ipv4\",\n      \"isAutoPopulate\": false,\n      \"downInterval\": 5,\n      \"interval\": \"3600\"\n    },\n    \"deviceReference\": {\n    \t\"link\": \"{{selfLink_bigip}}\"\n    },\n    \"partition\": \"Common\"\n}"
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "Create Import Task",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"var jsonData = JSON.parse(responseBody);",
+									"",
+									"// get device_IP",
+									"var device_IP = postman.getGlobalVariable( \"g_device_IP\");",
+									"",
+									"if ( typeof jsonData.id != 'undefined') {",
+									"    var task_ID = jsonData.id;",
+									"    postman.setGlobalVariable(\"g_task_ID\", task_ID);",
+									"    tests[\"Import Task created for \" + device_IP] = true;",
+									"}",
+									"else {",
+									"    tests[\"Import Task created for \" + device_IP] = false;",
+									"    postman.setNextRequest(null);",
+									"}",
+									""
+								]
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"// set device_IP",
+									"if ( typeof data.clusterName != 'undefined') {",
+									"    var clusterName = data.clusterName;",
+									"}",
+									"else {",
+									"    var clusterName = postman.getEnvironmentVariable(\"clusterName\");",
+									"}",
+									"postman.setGlobalVariable( \"g_clusterName\", clusterName);",
+									"",
+									"// set defaultResolution {none, USE_BIGIQ, USE_BIGIP}",
+									"if ( typeof data.defaultResolution != 'undefined') {",
+									"    var defaultResolution = data.defaultResolution;",
+									"}",
+									"else {",
+									"    var defaultResolution = postman.getEnvironmentVariable(\"defaultResolution\");",
+									"}",
+									"postman.setGlobalVariable( \"g_defaultResolution\", defaultResolution);",
+									""
+								]
+							}
+						}
+					],
+					"request": {
+						"url": "https://{{BIG-IQ_mgmt}}/mgmt/cm/adc-core/tasks/declare-mgmt-authority",
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"description": ""
+							},
+							{
+								"key": "X-F5-Auth-Token",
+								"value": "{{X-F5-Auth-Token}}",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n\t\"clusterName\": \"{{g_clusterName}}\",\r\n\t\"createChildTasks\": false,\r\n\t\"deviceReference\": {\r\n    \t\"link\": \"{{g_deviceReference}}\"\r\n\t},\r\n\t\"skipDiscovery\": true,\r\n\t\"snapshotWorkingConfig\": false,\r\n\t\"useBigiqSync\": false\r\n}"
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "Delay by idleTimeout Import",
+					"request": {
+						"url": "http://localhost:13186/",
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": " {\n   \"skipVerifyConfig\":false,\n   \"skipDistribution\":true,\n   \"snapshotReference\":null,\n   {{objectsToDeployReferences}},\n   \"name\":\"{{g_project_name}}\",\n   \"deploySpecifiedObjectsOnly\":false,\n   \"deviceReferences\":[\n      {\n         \"link\":\"{{selfLink_bigip}}\"\n      }\n   ]\n}\n\n"
+						},
+						"description": "Unfortunately, there is no sleep function available in javascript. to avoid burning CPU cycles or DDoS the BIG-IQ, I add this request."
+					},
+					"response": []
+				},
+				{
+					"name": "Wait until Imported",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"// get device_IP",
+									"var device_IP = postman.getGlobalVariable( \"g_device_IP\");",
+									"// get defaultResolution",
+									"var defaultResolution = postman.getGlobalVariable( \"g_defaultResolution\");",
+									"",
+									"// Analyse response",
+									"var jsonData = JSON.parse(responseBody);",
+									"",
+									"if ( typeof jsonData.status != 'undefined') {",
+									"",
+									"    if (jsonData.status === \"FINISHED\") {",
+									"        ",
+									"        ",
+									"        if ((typeof jsonData.currentStep != 'undefined') && (jsonData.currentStep === \"PENDING_CONFLICTS\")) {",
+									"            // conflicts need to be resolved",
+									"            if (defaultResolution === 'none') {",
+									"                tests[\"Import of \" + device_IP + \" status = \" + jsonData.status + \". Conflicts need to be resolved manually!\"] = false;",
+									"                postman.setNextRequest(null);",
+									"            }",
+									"            else if (typeof jsonData.conflicts != 'undefined') {",
+									"                var conflicts = jsonData.conflicts;",
+									"                ",
+									"                for ( var i in conflicts) {",
+									"                    conflicts[i].resolution = defaultResolution;",
+									"                }",
+									"                postman.setGlobalVariable(\"g_conflicts\", JSON.stringify(conflicts));",
+									"            }",
+									"            else {",
+									"                tests[\"Import of \" + device_IP + \" status = \" + jsonData.status + \".\"] = false;",
+									"                postman.setNextRequest(null);",
+									"            }",
+									"        }",
+									"        else {",
+									"            tests[\"Import of \" + device_IP + \" status = \" + jsonData.status + \".\"] = true;",
+									"            postman.setNextRequest(null);",
+									"        }",
+									"    }",
+									"    else if ((jsonData.status === \"CANCELLED\") || (jsonData.status === \"FAILED\")) {",
+									"        tests[\"Import of \" + device_IP + \" status = \" + jsonData.status + \".\"] = false;",
+									"        postman.setNextRequest(null);",
+									"    }",
+									"    else {",
+									"        postman.setNextRequest(\"Delay by idleTimeout Import\");",
+									"    }",
+									"}",
+									"else {",
+									"    tests[\"Import of \" + device_IP + \".\"] = false;",
+									"    postman.setNextRequest(null);",
+									"}",
+									""
+								]
+							}
+						}
+					],
+					"request": {
+						"url": "https://{{BIG-IQ_mgmt}}/mgmt/cm/adc-core/tasks/declare-mgmt-authority/{{g_task_ID}}",
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"description": ""
+							},
+							{
+								"key": "X-F5-Auth-Token",
+								"value": "{{X-F5-Auth-Token}}",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"{{node_address}}\",\n    \"address\": \"{{node_address}}\",\n    \"connectionLimit\": 0,\n    \"isEphemeral\": false,\n    \"rateLimit\": \"disabled\",\n    \"ratio\": 1,\n    \"sessionConfig\": \"user-enabled\",\n    \"stateConfig\": \"user-up\",\n    \"fqdn\": {\n      \"addressFamily\": \"ipv4\",\n      \"isAutoPopulate\": false,\n      \"downInterval\": 5,\n      \"interval\": \"3600\"\n    },\n    \"deviceReference\": {\n    \t\"link\": \"{{selfLink_bigip}}\"\n    },\n    \"partition\": \"Common\"\n}"
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "Resolve Import Task",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"var jsonData = JSON.parse(responseBody);",
+									"",
+									"// get device_IP",
+									"var device_IP = postman.getGlobalVariable( \"g_device_IP\");",
+									"",
+									"if ( typeof jsonData.id != 'undefined') {",
+									"    tests[\"Import Task resolved for \" + device_IP] = true;",
+									"    postman.setNextRequest(\"Delay by idleTimeout Import\");",
+									"}",
+									"else {",
+									"    tests[\"Import Task resolved for \" + device_IP] = false;",
+									"    postman.setNextRequest(null);",
+									"}",
+									""
+								]
+							}
+						}
+					],
+					"request": {
+						"url": "https://{{BIG-IQ_mgmt}}/mgmt/cm/adc-core/tasks/declare-mgmt-authority/{{g_task_ID}}",
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"description": ""
+							},
+							{
+								"key": "X-F5-Auth-Token",
+								"value": "{{X-F5-Auth-Token}}",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"conflicts\": {{g_conflicts}},\r\n    \"status\": \"STARTED\"\r\n}\r\n"
+						},
+						"description": ""
 					},
 					"response": []
 				}

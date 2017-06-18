@@ -1,0 +1,22 @@
+[
+{
+    "device_IP": "bigip.local",
+    "clusterName": "",
+    "defaultResolution": "none"
+},
+{
+    "device_IP": "bigip_one_a.local",
+    "clusterName": "cluster_one",
+    "defaultResolution": "USE_BIGIQ",
+    "BIG-IP_username": "admin",
+    "BIG-IP_password": "admin",
+    "BIG-IP_root_password": "default"
+},
+{
+    "device_IP": "bigip_one_b.local",
+    "clusterName": "cluster_one",
+    "defaultResolution": "USE_BIGIQ",
+    "BIG-IP_username": "admin",
+    "BIG-IP_password": "admin",
+    "BIG-IP_root_password": "default"
+}]
