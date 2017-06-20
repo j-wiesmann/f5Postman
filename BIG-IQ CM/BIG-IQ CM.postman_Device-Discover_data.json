@@ -1,22 +1,37 @@
 [
 {
-    "device_IP": "bigip.local",
+    "device_IP": "172.16.1.12",
     "clusterName": "",
-    "defaultResolution": "none"
+    "discover_ADC": "USE_BIGIQ",
+    "discover_ASM": "USE_BIGIP",
+    "discover_AFM": "USE_BIGIP",
+    "discover_APM": "false",
+    "discover_DNS": "none"
 },
 {
-    "device_IP": "bigip_one_a.local",
-    "clusterName": "cluster_one",
-    "defaultResolution": "USE_BIGIQ",
+    "device_IP": "172.16.1.11",
+    "clusterName": "pair",
+    "accessGroup": "MyAccessGroup",
+    "discover_ADC": "USE_BIGIQ",
+    "discover_ASM": "USE_BIGIP",
+    "discover_AFM": "false",
+    "discover_APM": "USE_BIGIP",
+    "discover_DNS": "false",
     "BIG-IP_username": "admin",
     "BIG-IP_password": "admin",
     "BIG-IP_root_password": "default"
 },
 {
-    "device_IP": "bigip_one_b.local",
-    "clusterName": "cluster_one",
-    "defaultResolution": "USE_BIGIQ",
+    "device_IP": "172.16.1.12",
+    "clusterName": "pair",
+    "accessGroup": "MyAccessGroup",
+    "discover_ADC": "USE_BIGIQ",
+    "discover_ASM": "USE_BIGIP",
+    "discover_AFM": "false",
+    "discover_APM": "USE_BIGIP",
+    "discover_DNS": "false",
     "BIG-IP_username": "admin",
     "BIG-IP_password": "admin",
     "BIG-IP_root_password": "default"
-}]
+}
+]
