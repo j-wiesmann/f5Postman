@@ -1,6 +1,11 @@
 # BIG-IQ CM
 
-This is a Postman collection for the BIG-IQ CM, tested on v5.2. This Collection is optimized to be used over Runner. This can be done over the Environmental Variables or over a Data File to enable several iterations to discover several BIG-IPs at once.
+This is a Postman collection for the BIG-IQ CM, tested on v5.2. This Collection is optimized to be used over Runner. This can be done over the Environmental Variables or over a Data File to enable several iterations to repeat the same task with different dataset.
+
+Right now, the following tasks are included:
+* Device: Discover and rediscover BIG-IPs with the different modules.
+* ADC: Deploy a virtual with monitor, pool and poolMember.
+* ADC: Change poolMember status.
 
 ## Collection
 

@@ -9,7 +9,7 @@
     "discover_DNS": "none"
 },
 {
-    "device_IP": "172.16.1.11",
+    "device_IP": "172.16.1.21",
     "clusterName": "pair",
     "accessGroup": "MyAccessGroup",
     "discover_ADC": "USE_BIGIQ",
@@ -22,7 +22,7 @@
     "BIG-IP_root_password": "default"
 },
 {
-    "device_IP": "172.16.1.12",
+    "device_IP": "172.16.1.22",
     "clusterName": "pair",
     "accessGroup": "MyAccessGroup",
     "discover_ADC": "USE_BIGIQ",
