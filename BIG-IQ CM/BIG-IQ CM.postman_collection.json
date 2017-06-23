@@ -2,7 +2,7 @@
 	"variables": [],
 	"info": {
 		"name": "BIG-IQ CM",
-		"_postman_id": "ff77b3ab-7020-9ee5-a66b-23559dbc4195",
+		"_postman_id": "f61dda6f-9499-4f38-a7c9-9201c1ce7d2c",
 		"description": "# BIG-IQ CM\n\nBefore you start with the deployment, follow these steps:\n\n1. Adapt the Authorization header in \"Get Authentication Token\".\n2. Select \"BIG-IQ CM\" as the default Environment set.\n3. Modify the Environment Variables according to your environment.\n\nYou can go through the deployment steps by step or let them run automated via Runner (see top left corner on the Postman GUI).\n\nRunner Setup:\n* Select the collection and the folder you would like to execute.\n* The Environment need to be set to BIG-IQ CM.\n* I would recommend setting the Delay at least to 50 ms.\n* Optional you can use a Data file (see example in this folder). This will overwrite the Environmental variables.\n* Set the Data File Type to JSON.\n* In the Example Data File, you can see two data sets. If you leave the Iteration at one, it will only use the first set. To use more data sets, you need to increase the Iteration accordingly.\n\n## BIG-IQ ADC - Deployment\n\nIn this folder, you will find an example, how to deploy a virtual with a pool, some PoolMembers http profile and a Monitor. Additionally, the deployment can be scheduled.\n\n## BIG-IQ ADC - Deployment\n\nThis is an example how the status of a list of PoolMembers can be changed directly.\n\n## BIG-IQ Device - Discover Devices\n\nThis collection can discover a device. If it is already discovered, it will just discover and import the selected modules and resolve collisions, following the given ruleset.\n\n* discover_ADC, discover_ASM, discover_AFM, discover_DNS - Enables the discovery and Import of modules and specifies how to handle collisions\n  * false - This module will not be discovered and imported.\n  * USE_BIGIQ - In case of conflict, configuration of BIG-IQ will be used.\n  * USE_BIGIP - In case of conflict, config of BIG-IP will be used.\n  * none - In case of conflict, tests fil fail and the import need to be done manually.\n* discover_APM - Enables the discovery and Import of the APM module and specifies how to handle collisions\n  * false - This module will not be discovered and imported.\n  * USE_BIGIP - In case of conflict, config of BIG-IP will be used.\n  * none - In case of conflict, tests fil fail and the import need to be done manually.\n* BIG-IP_username - Only needed if Device is not in trust jet\n* BIG-IP_password - Only needed if Device is not in trust jet\n* BIG-IP_root_password - Only needed if Device is not in trust jet and device is v11.x.x. the Framework need to be updated! (This is not tested jet.)",
 		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json"
 	},
@@ -935,16 +935,16 @@
 					"response": []
 				},
 				{
-					"name": "Delay by idleTimeout",
+					"name": "Delay",
 					"request": {
-						"url": "http://localhost:13186/",
+						"url": "https://postman-echo.com/delay/2",
 						"method": "GET",
 						"header": [],
 						"body": {
 							"mode": "raw",
 							"raw": " {\n   \"skipVerifyConfig\":false,\n   \"skipDistribution\":true,\n   \"snapshotReference\":null,\n   {{objectsToDeployReferences}},\n   \"name\":\"{{g_project_name}}\",\n   \"deploySpecifiedObjectsOnly\":false,\n   \"deviceReferences\":[\n      {\n         \"link\":\"{{selfLink_bigip}}\"\n      }\n   ]\n}\n\n"
 						},
-						"description": "Unfortunately, there is no sleep function available in javascript. to avoid burning CPU cycles or DDoS the BIG-IQ, I add this request."
+						"description": ""
 					},
 					"response": []
 				},
@@ -967,7 +967,7 @@
 									"    postman.setNextRequest(null);",
 									"}",
 									"else if (jsonData.status == \"STARTED\") {",
-									"    postman.setNextRequest(\"Delay by idleTimeout\");",
+									"    postman.setNextRequest(\"Delay\");",
 									"}",
 									"else if (jsonData.status == \"FINISHED\") {",
 									"    tests[\"Evaluation of Deployment\"] = true;",
@@ -1565,7 +1565,7 @@
 									"    var task_ID = jsonData.id;",
 									"    postman.setGlobalVariable(\"g_task_ID\", task_ID);",
 									"    tests[\"Trust creation Task created for \" + device_IP] = true;",
-									"    //postman.setNextRequest(\"Delay by idleTimeout\");",
+									"    //postman.setNextRequest(\"Delay-Discovery\");",
 									"}",
 									"else {",
 									"    tests[\"Trust creation Task created for \" + device_IP] = false;",
@@ -1600,16 +1600,16 @@
 					"response": []
 				},
 				{
-					"name": "Delay by idleTimeout Trust",
+					"name": "Delay-Trust",
 					"request": {
-						"url": "http://localhost:13186/",
+						"url": "https://postman-echo.com/delay/2",
 						"method": "GET",
 						"header": [],
 						"body": {
 							"mode": "raw",
 							"raw": " {\n   \"skipVerifyConfig\":false,\n   \"skipDistribution\":true,\n   \"snapshotReference\":null,\n   {{objectsToDeployReferences}},\n   \"name\":\"{{g_project_name}}\",\n   \"deploySpecifiedObjectsOnly\":false,\n   \"deviceReferences\":[\n      {\n         \"link\":\"{{selfLink_bigip}}\"\n      }\n   ]\n}\n\n"
 						},
-						"description": "Unfortunately, there is no sleep function available in javascript. to avoid burning CPU cycles or DDoS the BIG-IQ, I add this request."
+						"description": ""
 					},
 					"response": []
 				},
@@ -1653,7 +1653,7 @@
 									"        postman.setNextRequest(\"End\");",
 									"    }",
 									"    else {",
-									"        postman.setNextRequest(\"Delay by idleTimeout Trust\");",
+									"        postman.setNextRequest(\"Delay-Trust\");",
 									"    }",
 									"}",
 									"else {",
@@ -1703,7 +1703,7 @@
 									"",
 									"if ( typeof jsonData.status != 'undefined') {",
 									"    tests[\"Framework Update started for \" + device_IP] = true;",
-									"    postman.setNextRequest(\"Delay by idleTimeout Trust\");",
+									"    postman.setNextRequest(\"Delay-Trust\");",
 									"}",
 									"else {",
 									"    tests[\"Framework Update started for \" + device_IP] = false;",
@@ -1992,7 +1992,7 @@
 									"    var task_ID = jsonData.id;",
 									"    postman.setGlobalVariable(\"g_task_ID\", task_ID);",
 									"    tests[\"Deployment Task created for \" + device_IP] = true;",
-									"    postman.setNextRequest(\"Delay by idleTimeout\");",
+									"    postman.setNextRequest(\"Delay-Discovery\");",
 									"}",
 									"else {",
 									"    tests[\"Deployment Task created for \" + device_IP] = false;",
@@ -2074,16 +2074,16 @@
 					"response": []
 				},
 				{
-					"name": "Delay by idleTimeout",
+					"name": "Delay-Discovery",
 					"request": {
-						"url": "http://localhost:13186/",
+						"url": "https://postman-echo.com/delay/2",
 						"method": "GET",
 						"header": [],
 						"body": {
 							"mode": "raw",
 							"raw": " {\n   \"skipVerifyConfig\":false,\n   \"skipDistribution\":true,\n   \"snapshotReference\":null,\n   {{objectsToDeployReferences}},\n   \"name\":\"{{g_project_name}}\",\n   \"deploySpecifiedObjectsOnly\":false,\n   \"deviceReferences\":[\n      {\n         \"link\":\"{{selfLink_bigip}}\"\n      }\n   ]\n}\n\n"
 						},
-						"description": "Unfortunately, there is no sleep function available in javascript. to avoid burning CPU cycles or DDoS the BIG-IQ, I add this request."
+						"description": ""
 					},
 					"response": []
 				},
@@ -2117,7 +2117,7 @@
 									"        postman.setNextRequest(\"End\");",
 									"    }",
 									"    else {",
-									"        postman.setNextRequest(\"Delay by idleTimeout\");",
+									"        postman.setNextRequest(\"Delay-Discovery\");",
 									"    }",
 									"}",
 									"else {",
@@ -2337,16 +2337,16 @@
 					"response": []
 				},
 				{
-					"name": "Delay by idleTimeout Import",
+					"name": "Delay-Import",
 					"request": {
-						"url": "http://localhost:13186/",
+						"url": "https://postman-echo.com/delay/2",
 						"method": "GET",
 						"header": [],
 						"body": {
 							"mode": "raw",
 							"raw": " {\n   \"skipVerifyConfig\":false,\n   \"skipDistribution\":true,\n   \"snapshotReference\":null,\n   {{objectsToDeployReferences}},\n   \"name\":\"{{g_project_name}}\",\n   \"deploySpecifiedObjectsOnly\":false,\n   \"deviceReferences\":[\n      {\n         \"link\":\"{{selfLink_bigip}}\"\n      }\n   ]\n}\n\n"
 						},
-						"description": "Unfortunately, there is no sleep function available in javascript. to avoid burning CPU cycles or DDoS the BIG-IQ, I add this request."
+						"description": ""
 					},
 					"response": []
 				},
@@ -2402,7 +2402,7 @@
 									"        fin = true;",
 									"    }",
 									"    else {",
-									"        postman.setNextRequest(\"Delay by idleTimeout Import\");",
+									"        postman.setNextRequest(\"Delay-Import\");",
 									"    }",
 									"}",
 									"else {",
@@ -2464,7 +2464,7 @@
 									"",
 									"if ( typeof jsonData.id != 'undefined') {",
 									"    tests[\"Import Task resolved for \" + device_IP] = true;",
-									"    postman.setNextRequest(\"Delay by idleTimeout Import\");",
+									"    postman.setNextRequest(\"Delay-Import\");",
 									"}",
 									"else {",
 									"    tests[\"Import Task resolved for \" + device_IP] = false;",
@@ -2501,7 +2501,7 @@
 				{
 					"name": "End",
 					"request": {
-						"url": "http://localhost:13186/",
+						"url": "https://postman-echo.com/delay/2",
 						"method": "GET",
 						"header": [],
 						"body": {
