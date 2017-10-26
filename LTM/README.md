@@ -5,9 +5,9 @@ This is an example, how a LTM-Policy can be created and configured over iControl
 This is a Postman collection for the BIG-IP, tested on v12.1.1. It should also work on v13. This Collection is optimized to be used over Runner.
 
 Right now, the following folders are included:
-* Get Results: This Part is only included for troubleshooting and is not optimized for runner.
 * Create Basic Configuration: Here we create the policy and the virtual we use for the demo. Since it is not allowed to assign an empty policy to a virtual, we also create an initial pool for an initial domain name.
 * Add Domain Names: Run this to create new pools per Domain Name and assign them to the created policy. This part can be rerun to add further Domain Names later.
+* Get Results: This Part is only included for troubleshooting and is not optimized for Runner.
 
 ## collection.json
 
