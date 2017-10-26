@@ -1,6 +1,6 @@
 # LTM-Policy -- Pool per Domain Name
 
-This is an example, how a LTM-Policy can be created and configured over iControl REST API. The idea behind this example is, to create a virtual server and assign a new created policy to it.
+This is an example, how a LTM-Policy can be created and configured over iControl REST API. The idea behind this example is, to create a virtual server and assign a new created policy to it. Over the policy we will assign per hostname a dedicated pool to enable multihosting.
 
 This is a Postman collection for the BIG-IP, tested on v12.1.1. It should also work on v13. This Collection is optimized to be used over Runner.
 
